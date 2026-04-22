@@ -3,11 +3,25 @@ import { GroupSummary } from "../../store/groupStore";
 
 interface GroupCardProps {
   group: GroupSummary;
+  currentUserId?: string | null;
+  onJoin?: (groupId: string) => void;
+  joinLoadingId?: string | null;
 }
 
-const GroupCard = ({ group }: GroupCardProps) => {
+const GroupCard = ({ group, currentUserId, onJoin, joinLoadingId }: GroupCardProps) => {
   const progress = group.totalMembers ? Math.min(100, ((group.contributedMembers ?? 0) / group.totalMembers) * 100) : Math.min(100, (group.currentRound / 10) * 100);
   const status = group.source === "created" ? "Created" : group.status === "your-turn" ? "Your turn" : group.status === "ready" ? "Ready" : "Waiting for contributions";
+  const hasJoined = Boolean(currentUserId && group.memberUserIds?.includes(currentUserId));
+  const joinedCount = group.memberUserIds?.length ?? 0;
+  const canJoin = Boolean(
+    onJoin &&
+      currentUserId &&
+      group.source === "created" &&
+      group.creatorUserId &&
+      group.creatorUserId !== currentUserId &&
+      !hasJoined
+  );
+  const isJoining = joinLoadingId === group.id;
 
   return (
     <article className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-white backdrop-blur-xl transition-transform hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
@@ -17,7 +31,10 @@ const GroupCard = ({ group }: GroupCardProps) => {
           <h3 className="mt-2 font-display text-[24px] font-extrabold text-white">{group.name}</h3>
           {group.source === "created" && <p className="mt-1 text-xs text-white/50">Real-time created group</p>}
         </div>
-        <span className="rounded-full bg-[#F5A623] px-3 py-1 text-[11px] font-bold text-[#3F2200]">{status}</span>
+        <div className="flex flex-col items-end gap-2">
+          <span className="rounded-full bg-[#F5A623] px-3 py-1 text-[11px] font-bold text-[#3F2200]">{status}</span>
+          {hasJoined && <span className="rounded-full bg-[#27AE60] px-3 py-1 text-[11px] font-bold text-white">Joined</span>}
+        </div>
       </div>
 
       <div className="mt-5 space-y-4">
@@ -32,10 +49,28 @@ const GroupCard = ({ group }: GroupCardProps) => {
           <p>Release: {new Date(group.nextReleaseAt).toLocaleDateString()}</p>
         </div>
 
+        {group.source === "created" && (
+          <div className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-xs text-white/65">
+            <span>Members Joined</span>
+            <span className="font-semibold text-white">{joinedCount}</span>
+          </div>
+        )}
+
         <div className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 text-xs text-white/60">
           <span>Progress</span>
           <span>{Math.round(progress)}% complete</span>
         </div>
+
+        {canJoin && (
+          <button
+            type="button"
+            onClick={() => onJoin?.(group.id)}
+            disabled={isJoining}
+            className="secondary-button inline-flex w-full justify-center text-sm disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isJoining ? "Joining..." : "Join Group"}
+          </button>
+        )}
 
         <Link to={`/group/${group.id}`} state={{ group }} className="primary-button inline-flex w-full justify-center text-sm">
           View Group

@@ -12,6 +12,12 @@ const ConnectWalletButton = () => {
   const { isInstalled, isConnected, publicKey, network, connect, disconnect, isLoading, error } = useFreighter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  const handleDisconnect = () => {
+    disconnect();
+    setIsOpen(false);
+    navigate("/");
+  };
+
   if (!isInstalled) {
     return (
       <a
@@ -62,7 +68,7 @@ const ConnectWalletButton = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white backdrop-blur-md"
+        className="glass-soft inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm text-[#4c1d95]"
       >
         <span className="h-2 w-2 rounded-full bg-[#27AE60]" />
         <span className="mono text-[14px] font-medium">{truncateAddress(publicKey)}</span>
@@ -70,10 +76,10 @@ const ConnectWalletButton = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-14 z-50 w-72 rounded-xl border border-white/10 bg-[#0A1628] p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-          <p className="text-[11px] uppercase tracking-[0.14em] text-white/60">Connected Wallet</p>
-          <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-white/5 px-3 py-2">
-            <p className="mono break-all text-xs text-white/85">{publicKey}</p>
+        <div className="glass-soft absolute right-0 top-14 z-50 w-72 rounded-xl p-3">
+          <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Connected Wallet</p>
+          <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-white/70 px-3 py-2">
+            <p className="mono break-all text-xs text-slate-700">{publicKey}</p>
             <button
               type="button"
               className="text-xs text-[#00C6FF]"
@@ -84,11 +90,11 @@ const ConnectWalletButton = () => {
           </div>
 
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-white/70">Network</span>
+            <span className="text-xs text-slate-600">Network</span>
             <NetworkBadge network={network} />
           </div>
 
-          <button type="button" onClick={disconnect} className="danger-button mt-3 w-full text-sm">
+          <button type="button" onClick={handleDisconnect} className="danger-button mt-3 w-full text-sm">
             Disconnect
           </button>
         </div>

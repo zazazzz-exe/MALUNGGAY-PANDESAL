@@ -6,6 +6,8 @@ export interface GroupSummary {
   name: string;
   source?: "live" | "created";
   contractId?: string;
+  creatorUserId?: string;
+  memberUserIds?: string[];
   createdAt?: string;
   yourTurn: number;
   totalMembers?: number;
@@ -38,6 +40,7 @@ export interface CreateGroupInput {
   members: string[];
   contributionAmount: string;
   rotationFrequencyDays: number;
+  creatorUserId?: string;
 }
 
 interface GroupStoreState {
@@ -64,7 +67,7 @@ export const useGroupStore = create<GroupStoreState>()(
 
           return { groups: Array.from(merged.values()) };
         }),
-      addCreatedGroup: ({ name, members, contributionAmount, rotationFrequencyDays }) => {
+      addCreatedGroup: ({ name, members, contributionAmount, rotationFrequencyDays, creatorUserId }) => {
         const groupId = `local-${crypto.randomUUID()}`;
         const now = new Date();
         const nextReleaseAt = new Date(now.getTime() + rotationFrequencyDays * 86400000).toISOString();
@@ -73,6 +76,8 @@ export const useGroupStore = create<GroupStoreState>()(
           id: groupId,
           name,
           source: "created",
+          creatorUserId,
+          memberUserIds: creatorUserId ? [creatorUserId] : [],
           createdAt: now.toISOString(),
           yourTurn: 1,
           totalMembers: members.length,
@@ -114,13 +119,17 @@ export const useGroupStore = create<GroupStoreState>()(
       migrate: (persistedState: unknown) => {
         const state = (persistedState || {}) as Partial<GroupStoreState>;
         const groups = Array.isArray(state.groups) ? state.groups : [];
+        const normalizedGroups = groups.map((group) => ({
+          ...group,
+          memberUserIds: Array.isArray(group.memberUserIds) ? group.memberUserIds : []
+        }));
         const contributionHistory = Array.isArray(state.contributionHistory)
           ? state.contributionHistory
           : [];
 
         return {
           ...state,
-          groups,
+          groups: normalizedGroups,
           contributionHistory
         };
       }

@@ -106,21 +106,21 @@ const GroupDetail = () => {
   }, [data, members]);
 
   return (
-    <section className="mx-auto flex max-w-[900px] flex-col gap-6 px-4 py-6 text-white md:px-0">
-      <nav className="flex items-center gap-4 rounded-[20px] border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-xl">
+    <section className="mx-auto flex max-w-[900px] flex-col gap-6 rounded-[28px] bg-[linear-gradient(165deg,#f3e8ff_0%,#f8f5ff_45%,#ede9fe_100%)] px-4 py-6 text-slate-900 md:px-6">
+      <nav className="glass-soft flex items-center gap-4 rounded-[20px] px-5 py-4">
         <button
           type="button"
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-purple-50 hover:text-[#5b21b6]"
         >
           <span className="material-symbols-outlined text-lg">arrow_back</span>
           Back to Dashboard
         </button>
-        <div className="flex-1 border-l border-white/10" />
+        <div className="flex-1 border-l border-purple-100" />
         <button
           type="button"
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-purple-50 hover:text-[#5b21b6]"
         >
           <span className="material-symbols-outlined text-lg">view_comfy</span>
           All Groups
@@ -128,36 +128,36 @@ const GroupDetail = () => {
         <button
           type="button"
           onClick={() => navigate("/profile")}
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-purple-50 hover:text-[#5b21b6]"
         >
           <span className="material-symbols-outlined text-lg">person</span>
           Profile
         </button>
       </nav>
 
-      <header className="rounded-[24px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+      <header className="glass-soft rounded-[24px] p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-white/50">Group Detail</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Group Detail</p>
             <h1 className="font-display text-4xl font-extrabold">{groupName}</h1>
-            <p className="mt-2 text-sm text-white/65">Creation date and status are derived from your live Soroban contract state.</p>
+            <p className="mt-2 text-sm text-slate-600">Creation date and status are derived from your live Soroban contract state.</p>
           </div>
-          <div className={`rounded-full px-4 py-2 text-xs font-bold ${isDraftGroup ? "bg-white/10 text-white" : "bg-[#F5A623] text-[#3F2200]"}`}>
+          <div className={`rounded-full px-4 py-2 text-xs font-bold ${isDraftGroup ? "bg-purple-100 text-[#5b21b6]" : "bg-[#F5A623] text-[#3F2200]"}`}>
             {isDraftGroup ? "Draft" : "Active"}
           </div>
         </div>
       </header>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <article className="glass-panel rounded-[20px] p-5">
-          <p className="text-xs uppercase tracking-[0.18em] text-white/50">Rotation Timeline</p>
-          <div className="mt-4">{isLoading ? <p className="text-sm text-white/60">Loading live rotation...</p> : <RotationTimeline members={members.map((m) => m.address)} currentIndex={Number(data?.rotation_index ?? 0)} />}</div>
+        <article className="glass-soft rounded-[20px] p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Rotation Timeline</p>
+          <div className="mt-4">{isLoading ? <p className="text-sm text-slate-600">Loading live rotation...</p> : <RotationTimeline members={members.map((m) => m.address)} currentIndex={Number(data?.rotation_index ?? 0)} />}</div>
         </article>
 
-        <article className="glass-panel rounded-[20px] p-5">
-          <p className="text-xs uppercase tracking-[0.18em] text-white/50">Pool Balance</p>
+        <article className="glass-soft rounded-[20px] p-5">
+          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Pool Balance</p>
           <p className="mt-3 text-4xl font-extrabold text-[#00C6FF]">USDC {poolBalance}</p>
-          <p className="mt-2 text-sm text-white/60">Release unlocks when all members contribute.</p>
+          <p className="mt-2 text-sm text-slate-600">Release unlocks when all members contribute.</p>
           <div className="mt-5">
             <CountdownTimer targetDate={new Date(Date.now() + 3 * 86400000 + 14 * 3600000).toISOString()} />
           </div>
@@ -168,18 +168,18 @@ const GroupDetail = () => {
         <MemberList members={members} />
       </article>
 
-      <article className="glass-panel rounded-[24px] p-6">
-        <p className="text-xs uppercase tracking-[0.18em] text-white/50">Transfer XLM</p>
-        <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+      <article className="glass-soft rounded-[24px] p-6">
+        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Transfer XLM</p>
+        <div className="mt-3 rounded-2xl border border-purple-100 bg-white/75 px-4 py-3 text-sm text-slate-600">
           This action sends native XLM directly from your Freighter wallet. It does not require join-group contract membership.
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-white/70">Round {currentRound} of {members.length || 1}</p>
-            <p className="mt-1 text-2xl font-bold text-white">{publicKey ? "Send from Freighter now" : "Connect wallet to continue"}</p>
-            <p className="mt-2 text-sm text-white/55">Recipient: <span className="mono">{toShortAddress(recipientAddress)}</span></p>
-            {isDraftGroup && <p className="mt-2 text-sm text-white/55">This group is stored locally; transfer target falls back to first listed member.</p>}
-            <label className="mt-3 block text-sm font-semibold text-white/75">
+            <p className="text-sm text-slate-600">Round {currentRound} of {members.length || 1}</p>
+            <p className="mt-1 text-2xl font-bold text-[#2a133f]">{publicKey ? "Send from Freighter now" : "Connect wallet to continue"}</p>
+            <p className="mt-2 text-sm text-slate-500">Recipient: <span className="mono">{toShortAddress(recipientAddress)}</span></p>
+            {isDraftGroup && <p className="mt-2 text-sm text-slate-500">This group is stored locally; transfer target falls back to first listed member.</p>}
+            <label className="mt-3 block text-sm font-semibold text-slate-700">
               Amount (XLM)
               <input
                 type="number"
@@ -187,7 +187,7 @@ const GroupDetail = () => {
                 step="0.0000001"
                 value={transferAmount}
                 onChange={(event) => setTransferAmount(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none"
+                className="mt-2 w-full rounded-xl border border-purple-100 bg-white/80 px-3 py-2 text-slate-800 outline-none"
               />
             </label>
           </div>
@@ -201,18 +201,18 @@ const GroupDetail = () => {
         </div>
       </article>
 
-      <article className="rounded-[24px] border border-white/10 bg-white/5 p-6 text-white backdrop-blur-xl">
-        <p className="text-xs uppercase tracking-[0.18em] text-white/50">Contribution History</p>
+      <article className="glass-soft rounded-[24px] p-6 text-slate-900">
+        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Contribution History</p>
         {contributionHistory.length === 0 ? (
-          <p className="mt-4 text-sm text-white/65">No contributions recorded yet for this group.</p>
+          <p className="mt-4 text-sm text-slate-600">No contributions recorded yet for this group.</p>
         ) : (
           <div className="mt-4 space-y-3">
             {contributionHistory.map((entry) => (
-              <div key={entry.id} className="rounded-2xl border border-white/10 bg-[#0A1628] px-4 py-3">
+              <div key={entry.id} className="rounded-2xl border border-purple-100 bg-white/75 px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-white">{entry.amount} {entry.asset || "XLM"} transferred</p>
-                    <p className="mono mt-1 text-xs text-white/55">{toShortAddress(entry.memberAddress)}</p>
+                    <p className="font-semibold text-[#2a133f]">{entry.amount} {entry.asset || "XLM"} transferred</p>
+                    <p className="mono mt-1 text-xs text-slate-500">{toShortAddress(entry.memberAddress)}</p>
                   </div>
                   <a className="text-xs text-[#00C6FF] underline" href={`https://stellar.expert/explorer/testnet/tx/${entry.hash}`} target="_blank" rel="noreferrer">
                     View transaction

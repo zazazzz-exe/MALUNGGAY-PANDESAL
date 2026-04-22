@@ -42,10 +42,10 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D1F3C] px-4 py-10 text-white">
+    <div className="min-h-screen bg-[linear-gradient(165deg,#f3e8ff_0%,#f8f5ff_45%,#ede9fe_100%)] px-4 py-10 text-slate-900">
       <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1fr_0.95fr]">
         <section className="space-y-6">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.18em] text-white/50">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.18em] text-slate-500">
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Back to home
           </Link>
@@ -54,7 +54,7 @@ const AuthPage = () => {
             <br />
             then connect your wallet.
           </h1>
-          <p className="max-w-xl text-lg leading-relaxed text-white/70">
+          <p className="max-w-xl text-lg leading-relaxed text-slate-600">
             Create a local PaluwagaChain account to unlock wallet connection and group creation. Once you sign in, you can connect Freighter and start a pool.
           </p>
 
@@ -64,27 +64,27 @@ const AuthPage = () => {
               ["Fast sign up", "Create an account in seconds."],
               ["Persistent login", "Your session stays in this browser."]
             ].map(([title, description]) => (
-              <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div key={title} className="glass-soft rounded-2xl p-4">
                 <p className="font-semibold">{title}</p>
-                <p className="mt-2 text-sm text-white/65">{description}</p>
+                <p className="mt-2 text-sm text-slate-600">{description}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="glass-panel rounded-[28px] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)] md:p-8">
-          <div className="flex gap-2 rounded-full bg-white/5 p-1 text-sm font-semibold">
+        <section className="glass-soft rounded-[28px] p-6 shadow-[0_30px_80px_rgba(124,58,237,0.14)] md:p-8">
+          <div className="flex gap-2 rounded-full bg-white/70 p-1 text-sm font-semibold">
             <button
               type="button"
               onClick={() => setMode("sign-up")}
-              className={`flex-1 rounded-full px-4 py-3 transition ${mode === "sign-up" ? "bg-[#F5A623] text-[#3F2200]" : "text-white/70"}`}
+              className={`flex-1 rounded-full px-4 py-3 transition ${mode === "sign-up" ? "bg-[#F5A623] text-[#3F2200]" : "text-slate-600"}`}
             >
               Sign Up
             </button>
             <button
               type="button"
               onClick={() => setMode("sign-in")}
-              className={`flex-1 rounded-full px-4 py-3 transition ${mode === "sign-in" ? "bg-[#00C6FF] text-[#0A1628]" : "text-white/70"}`}
+              className={`flex-1 rounded-full px-4 py-3 transition ${mode === "sign-in" ? "bg-[#00C6FF] text-[#0A1628]" : "text-slate-600"}`}
             >
               Sign In
             </button>
@@ -92,47 +92,47 @@ const AuthPage = () => {
 
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             {mode === "sign-up" && (
-              <label className="block text-sm font-semibold text-white/80">
+              <label className="block text-sm font-semibold text-slate-700">
                 Full Name
                 <input
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-[#00C6FF]"
+                  className="mt-2 w-full rounded-2xl border border-purple-100 bg-white/80 px-4 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#7c3aed]"
                   placeholder="Juan Dela Cruz"
                 />
               </label>
             )}
 
-            <label className="block text-sm font-semibold text-white/80">
+            <label className="block text-sm font-semibold text-slate-700">
               Email Address
               <input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-[#00C6FF]"
+                className="mt-2 w-full rounded-2xl border border-purple-100 bg-white/80 px-4 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#7c3aed]"
                 placeholder="juan@example.com"
               />
             </label>
 
-            <label className="block text-sm font-semibold text-white/80">
+            <label className="block text-sm font-semibold text-slate-700">
               Password
               <input
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-[#00C6FF]"
+                className="mt-2 w-full rounded-2xl border border-purple-100 bg-white/80 px-4 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#7c3aed]"
                 placeholder="At least 6 characters"
               />
             </label>
 
-            {error && <p className="rounded-2xl border border-[#E74C3C]/30 bg-[#E74C3C]/10 px-4 py-3 text-sm text-white">{error}</p>}
+            {error && <p className="rounded-2xl border border-[#E74C3C]/30 bg-[#E74C3C]/10 px-4 py-3 text-sm text-[#7f1d1d]">{error}</p>}
 
             <button type="submit" className="primary-button w-full justify-center py-3 text-base">
               {mode === "sign-up" ? "Create Account" : "Sign In"}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-white/55">
+          <p className="mt-6 text-center text-sm text-slate-500">
             {mode === "sign-up" ? "Already have an account?" : "Need an account?"}{" "}
             <button
               type="button"

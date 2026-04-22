@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import GroupCard from "../components/groups/GroupCard";
 import { useCountUp } from "../hooks/useCountUp";
 import { useFreighter } from "../hooks/useFreighter";
 import { useGroupState } from "../hooks/useGroupState";
 import { useInViewAnimation } from "../hooks/useInViewAnimation";
 import { useGroupStore, GroupSummary } from "../store/groupStore";
+import { useAuthStore } from "../store/authStore";
+import { fetchSharedGroups, joinSharedGroup } from "../services/groupService";
 
 const toAddressString = (value: unknown): string => {
   if (typeof value === "string") return value;
@@ -70,16 +72,80 @@ const normalizeGroupState = (state: any, publicKey: string | null): GroupSummary
 const Dashboard = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const sidebarVisible = useInViewAnimation(sidebarRef);
+  const navigate = useNavigate();
+  const currentUserId = useAuthStore((state) => state.currentUserId);
   const { publicKey, disconnect } = useFreighter();
   const { data, isLoading, error } = useGroupState();
   const { groups, upsertGroups } = useGroupStore();
   const [activeTab, setActiveTab] = useState<"all" | "created">("all");
+  const [sharedGroupsError, setSharedGroupsError] = useState<string | null>(null);
+  const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleDisconnect = () => {
+    disconnect();
+    navigate("/");
+  };
 
   const liveGroups = useMemo(() => normalizeGroupState(data, publicKey), [data, publicKey]);
 
   useEffect(() => {
     upsertGroups(liveGroups);
   }, [liveGroups, upsertGroups]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSharedGroups = async () => {
+      try {
+        const sharedGroups = await fetchSharedGroups();
+        if (!cancelled) {
+          upsertGroups(sharedGroups);
+          setSharedGroupsError(null);
+        }
+      } catch (fetchError) {
+        if (!cancelled) {
+          setSharedGroupsError(fetchError instanceof Error ? fetchError.message : "Unable to fetch shared groups.");
+        }
+      }
+    };
+
+    void loadSharedGroups();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [upsertGroups]);
+
+  const loadSharedGroups = async () => {
+    try {
+      setIsRefreshing(true);
+      const sharedGroups = await fetchSharedGroups();
+      upsertGroups(sharedGroups);
+      setSharedGroupsError(null);
+    } catch (fetchError) {
+      setSharedGroupsError(fetchError instanceof Error ? fetchError.message : "Unable to fetch shared groups.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleJoinGroup = async (groupId: string) => {
+    if (!currentUserId) {
+      navigate("/auth?redirect=/dashboard");
+      return;
+    }
+
+    try {
+      setJoiningGroupId(groupId);
+      const updatedGroup = await joinSharedGroup(groupId, currentUserId);
+      upsertGroups([updatedGroup]);
+    } catch (joinError) {
+      setSharedGroupsError(joinError instanceof Error ? joinError.message : "Unable to join group.");
+    } finally {
+      setJoiningGroupId(null);
+    }
+  };
 
   const visibleGroups = useMemo(() => {
     let filtered = [...groups].sort((left, right) => {
@@ -94,21 +160,31 @@ const Dashboard = () => {
     });
 
     if (activeTab === "created") {
-      filtered = filtered.filter((group) => group.source === "created");
+      filtered = filtered.filter((group) => {
+        if (group.source !== "created") {
+          return false;
+        }
+
+        if (!currentUserId) {
+          return false;
+        }
+
+        return group.creatorUserId === currentUserId || Boolean(group.memberUserIds?.includes(currentUserId));
+      });
     }
 
     return filtered;
-  }, [groups, activeTab]);
+  }, [groups, activeTab, currentUserId]);
 
   const totalContributed = useCountUp(Number(data?.contribution_amount ?? 0) || 0, Boolean(data), 1200);
   const totalReceived = useCountUp(Number(data?.pool_balance ?? 0) || 0, Boolean(data), 1200);
 
   return (
-    <div className="min-h-screen bg-[#0D1F3C] text-white">
+    <div className="min-h-screen bg-[linear-gradient(165deg,#f3e8ff_0%,#f8f5ff_45%,#ede9fe_100%)] text-slate-900">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         <aside
           ref={sidebarRef}
-          className={`hidden w-[240px] shrink-0 border-r border-white/10 bg-[#0A1628] px-5 py-6 lg:flex lg:flex-col ${
+          className={`glass-soft hidden w-[240px] shrink-0 border-r border-purple-100 px-5 py-6 lg:flex lg:flex-col ${
             sidebarVisible ? "visible" : ""
           }`}
         >
@@ -118,7 +194,7 @@ const Dashboard = () => {
             </div>
             <div>
               <p className="font-display text-lg font-extrabold">PaluwagaChain</p>
-              <p className="text-xs text-white/50">Dashboard</p>
+              <p className="text-xs text-slate-500">Dashboard</p>
             </div>
           </div>
 
@@ -128,8 +204,8 @@ const Dashboard = () => {
               onClick={() => setActiveTab("all")}
               className={`flex w-full items-center gap-3 rounded-xl border-l-4 px-4 py-3 transition ${
                 activeTab === "all"
-                  ? "border-[#00C6FF] bg-white/5 text-white"
-                  : "border-transparent text-white/65 hover:bg-white/5 hover:text-white"
+                  ? "border-[#00C6FF] bg-purple-50 text-[#5b21b6]"
+                  : "border-transparent text-slate-600 hover:bg-purple-50 hover:text-[#5b21b6]"
               }`}
             >
               <span className="material-symbols-outlined text-base">grid_view</span>
@@ -140,8 +216,8 @@ const Dashboard = () => {
               onClick={() => setActiveTab("created")}
               className={`flex w-full items-center gap-3 rounded-xl border-l-4 px-4 py-3 transition ${
                 activeTab === "created"
-                  ? "border-[#00C6FF] bg-white/5 text-white"
-                  : "border-transparent text-white/65 hover:bg-white/5 hover:text-white"
+                  ? "border-[#00C6FF] bg-purple-50 text-[#5b21b6]"
+                  : "border-transparent text-slate-600 hover:bg-purple-50 hover:text-[#5b21b6]"
               }`}
             >
               <span className="material-symbols-outlined text-base">bookmark</span>
@@ -149,38 +225,38 @@ const Dashboard = () => {
             </button>
             <Link
               to="/create"
-              className="flex items-center gap-3 rounded-xl border-l-4 border-transparent px-4 py-3 text-white/65 transition hover:bg-white/5 hover:text-white"
+              className="flex items-center gap-3 rounded-xl border-l-4 border-transparent px-4 py-3 text-slate-600 transition hover:bg-purple-50 hover:text-[#5b21b6]"
             >
               <span className="material-symbols-outlined text-base">add_circle</span>
               Create Group
             </Link>
             <Link
               to="/profile"
-              className="flex items-center gap-3 rounded-xl border-l-4 border-transparent px-4 py-3 text-white/65 transition hover:bg-white/5 hover:text-white"
+              className="flex items-center gap-3 rounded-xl border-l-4 border-transparent px-4 py-3 text-slate-600 transition hover:bg-purple-50 hover:text-[#5b21b6]"
             >
               <span className="material-symbols-outlined text-base">person</span>
               Profile
             </Link>
             <button
               type="button"
-              onClick={disconnect}
-              className="flex w-full items-center gap-3 rounded-xl border-l-4 border-transparent px-4 py-3 text-left text-white/65 transition hover:bg-white/5 hover:text-white"
+              onClick={handleDisconnect}
+              className="flex w-full items-center gap-3 rounded-xl border-l-4 border-transparent px-4 py-3 text-left text-slate-600 transition hover:bg-purple-50 hover:text-[#5b21b6]"
             >
               <span className="material-symbols-outlined text-base">logout</span>
               Disconnect
             </button>
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">Wallet Address</p>
-            <p className="mono mt-2 break-all text-xs text-white/80">{publicKey || "Connect Freighter"}</p>
+          <div className="mt-auto rounded-2xl border border-purple-100 bg-white/70 p-4">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Wallet Address</p>
+            <p className="mono mt-2 break-all text-xs text-slate-700">{publicKey || "Connect Freighter"}</p>
           </div>
         </aside>
 
         <main className="flex-1 px-5 py-6 lg:px-8">
-          <header className="mb-6 flex items-center justify-between rounded-[20px] border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-xl">
+          <header className="glass-soft mb-6 flex items-center justify-between rounded-[20px] px-5 py-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-white/50">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                 {activeTab === "created" ? "My Groups" : "All Groups"}
               </p>
               <h1 className="font-display text-3xl font-extrabold">
@@ -191,7 +267,9 @@ const Dashboard = () => {
               <Link to="/create" className="secondary-button hidden sm:inline-flex">
                 Create Group
               </Link>
-              <button className="primary-button">Refresh</button>
+              <button type="button" onClick={() => void loadSharedGroups()} className="primary-button" disabled={isRefreshing}>
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </button>
             </div>
           </header>
 
@@ -201,8 +279,8 @@ const Dashboard = () => {
               ["Total Received", `USDC ${totalReceived}`],
               ["Active Groups", String(visibleGroups.length)]
             ].map(([label, value]) => (
-              <article key={label} className="glass-panel rounded-2xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.18)]">
-                <p className="text-[13px] uppercase tracking-[0.18em] text-white/55">{label}</p>
+              <article key={label} className="glass-soft interactive-card rounded-2xl p-5">
+                <p className="text-[13px] uppercase tracking-[0.18em] text-slate-500">{label}</p>
                 <p className="mt-3 text-3xl font-extrabold text-[#00C6FF]">{value}</p>
               </article>
             ))}
@@ -210,18 +288,25 @@ const Dashboard = () => {
 
           <section className="mt-6 space-y-4">
             {error && (
-              <div className="rounded-2xl border border-[#E74C3C]/30 bg-[#E74C3C]/10 p-4 text-sm text-white">
+              <div className="rounded-2xl border border-[#E74C3C]/30 bg-[#E74C3C]/10 p-4 text-sm text-[#7f1d1d]">
                 Failed to load group state: {error instanceof Error ? error.message : "Unknown error"}
               </div>
             )}
+            {sharedGroupsError && (
+              <div className="rounded-2xl border border-[#E74C3C]/30 bg-[#E74C3C]/10 p-4 text-sm text-[#7f1d1d]">
+                Shared groups warning: {sharedGroupsError}
+              </div>
+            )}
             {isLoading && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+              <div className="rounded-2xl border border-purple-100 bg-white/70 p-4 text-sm text-slate-600">
                 Loading live group data...
               </div>
             )}
             {!isLoading && !error && visibleGroups.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
-                No live group data yet. Set VITE_CONTRACT_ID and connect a wallet that belongs to the group.
+              <div className="rounded-2xl border border-purple-100 bg-white/70 p-4 text-sm text-slate-600">
+                {activeTab === "all"
+                  ? "No groups yet. Create a group from any account, then tap Refresh."
+                  : "You have not created or joined any groups yet."}
               </div>
             )}
           </section>
@@ -229,7 +314,12 @@ const Dashboard = () => {
           <section className="mt-6 grid gap-4 md:grid-cols-2">
             {visibleGroups.map((group, index) => (
               <div key={group.id} className={`animate-on-scroll visible stagger-${Math.min(index + 1, 5)}`}>
-                <GroupCard group={group} />
+                <GroupCard
+                  group={group}
+                  currentUserId={currentUserId}
+                  onJoin={handleJoinGroup}
+                  joinLoadingId={joiningGroupId}
+                />
               </div>
             ))}
           </section>
