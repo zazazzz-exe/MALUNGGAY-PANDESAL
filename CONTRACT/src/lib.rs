@@ -55,11 +55,11 @@ pub enum Error {
 }
 
 #[contract]
-pub struct PaluwagaChain;
+pub struct Hearth;
 
 #[contractimpl]
-impl PaluwagaChain {
-    // Initializes the paluwagan group with admin, token, contribution amount and schedule.
+impl Hearth {
+    // Kindles a new Hearth: admin, token, contribution amount, and Season length.
     pub fn initialize(
         env: Env,
         admin: Address,
@@ -106,7 +106,7 @@ impl PaluwagaChain {
         Ok(())
     }
 
-    // Adds a new member to the rotation queue if the game has not started and capacity allows.
+    // Adds a new Keeper to the Season rotation if the Hearth has not started and capacity allows.
     pub fn join_group(env: Env, member_address: Address) -> Result<(), Error> {
         Self::assert_initialized(&env)?;
 
@@ -158,7 +158,7 @@ impl PaluwagaChain {
         Ok(())
     }
 
-    // Pulls one contribution from the member and automatically releases the pot when everyone paid.
+    // Pulls one tending from the Keeper and automatically sends warmth when everyone has tended.
     pub fn contribute(env: Env, member_address: Address) -> Result<(), Error> {
         Self::assert_initialized(&env)?;
 
@@ -236,13 +236,13 @@ impl PaluwagaChain {
         Ok(())
     }
 
-    // Releases the full pooled balance to the current recipient and advances the round.
+    // Sends the full Hearth balance as warmth to the current Kin and advances the Season.
     pub fn release(env: Env) -> Result<(), Error> {
         Self::assert_initialized(&env)?;
         Self::release_internal(&env, true)
     }
 
-    // Returns the complete group-level state required by the frontend.
+    // Returns the complete Hearth-level state required by the frontend.
     pub fn get_group_state(env: Env) -> Result<GroupState, Error> {
         Self::assert_initialized(&env)?;
 
@@ -272,7 +272,7 @@ impl PaluwagaChain {
         })
     }
 
-    // Returns a single member's participation and contribution metrics.
+    // Returns a single Keeper's participation and tending metrics.
     pub fn get_member_info(env: Env, address: Address) -> Result<MemberInfo, Error> {
         Self::assert_initialized(&env)?;
 
@@ -307,7 +307,7 @@ impl PaluwagaChain {
     }
 }
 
-impl PaluwagaChain {
+impl Hearth {
     fn assert_initialized(env: &Env) -> Result<(), Error> {
         if !env.storage().persistent().has(&DataKey::Admin) {
             return Err(Error::NotInitialized);

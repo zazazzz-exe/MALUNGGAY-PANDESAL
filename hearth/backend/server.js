@@ -111,5 +111,5 @@ app.post("/groups/:id/join", (req, res) => {
 
 const PORT = Number(process.env.PORT || 4000);
 app.listen(PORT, () => {
-  console.log(`Paluwaga backend running on http://localhost:${PORT}`);
+  console.log(`Hearth backend running on http://localhost:${PORT}`);
 });

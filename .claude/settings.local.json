@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:/Users/Admin/Desktop/PROJECTS-2026/MALUNGGAY-PANDESAL\" mv paluwaga-chain hearth)",
+      "Bash(git -C \"c:/Users/Admin/Desktop/PROJECTS-2026/MALUNGGAY-PANDESAL\" status --short)",
+      "Bash(git -C \"c:/Users/Admin/Desktop/PROJECTS-2026/MALUNGGAY-PANDESAL\" mv hearth/frontend/public/PaluwagaChain_LogoPure.png hearth/frontend/public/Hearth_LogoPure.png)",
+      "Bash(git -C \"c:/Users/Admin/Desktop/PROJECTS-2026/MALUNGGAY-PANDESAL\" mv hearth/frontend/src/components/ui/PurpleCursorGlow.tsx hearth/frontend/src/components/ui/AmberCursorGlow.tsx)",
+      "Bash(git -C \"c:/Users/Admin/Desktop/PROJECTS-2026/MALUNGGAY-PANDESAL\" mv hearth/frontend/src/components/groups/GroupCard.tsx hearth/frontend/src/components/groups/HearthCard.tsx)",
+      "Bash(git -C \"c:/Users/Admin/Desktop/PROJECTS-2026/MALUNGGAY-PANDESAL\" rm PaluwagaChain_Logo.png PaluwagaChain_LogoPure.png hearth/frontend/build_output.txt contract/cargo_test_output.txt)",
+      "Bash(git rm *)",
+      "Bash(npm run *)"
+    ]
+  }
+}

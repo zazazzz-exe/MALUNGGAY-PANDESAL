@@ -4,11 +4,11 @@ extern crate std;
 
 use soroban_sdk::{testutils::Address as _, token, Address, Env};
 
-use crate::{Error, PaluwagaChain, PaluwagaChainClient};
+use crate::{Error, Hearth, HearthClient};
 
 fn setup() -> (
     Env,
-    PaluwagaChainClient<'static>,
+    HearthClient<'static>,
     Address,
     token::Client<'static>,
     token::StellarAssetClient<'static>,
@@ -31,8 +31,8 @@ fn setup() -> (
     let token_client = token::Client::new(&env, &token_address);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_address);
 
-    let contract_id = env.register_contract(None, PaluwagaChain);
-    let client = PaluwagaChainClient::new(&env, &contract_id);
+    let contract_id = env.register_contract(None, Hearth);
+    let client = HearthClient::new(&env, &contract_id);
 
     client.initialize(&admin, &token_address, &10_000_000i128, &7u32);
 
