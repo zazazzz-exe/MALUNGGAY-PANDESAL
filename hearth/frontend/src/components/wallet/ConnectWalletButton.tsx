@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFreighter } from "../../hooks/useFreighter";
+import { useNicknames } from "../../hooks/useNicknames";
 import NetworkBadge from "./NetworkBadge";
 import { useAuthStore } from "../../store/authStore";
+import AddressDisplay from "../ui/AddressDisplay";
 
 const truncateAddress = (value: string) => `${value.slice(0, 4)}...${value.slice(-4)}`;
 
@@ -11,6 +13,8 @@ const ConnectWalletButton = () => {
   const navigate = useNavigate();
   const { isInstalled, isConnected, publicKey, network, connect, disconnect, isLoading, error } = useFreighter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { getNickname } = useNicknames();
+  const nickname = publicKey ? getNickname(publicKey) : null;
 
   const handleDisconnect = () => {
     disconnect();
@@ -71,22 +75,29 @@ const ConnectWalletButton = () => {
         className="glass-soft inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm text-ember-deep"
       >
         <span className="h-2 w-2 rounded-full bg-success" />
-        <span className="mono text-[14px] font-medium">{truncateAddress(publicKey)}</span>
+        <span className={`text-[14px] font-medium ${nickname ? "" : "mono"}`}>
+          {nickname || truncateAddress(publicKey)}
+        </span>
         <span className="material-symbols-outlined text-base">expand_more</span>
       </button>
 
       {isOpen && (
-        <div className="glass-soft absolute right-0 top-14 z-50 w-72 rounded-xl p-3">
-          <p className="text-[11px] uppercase tracking-[0.14em] text-wood-soft/70">Connected Wallet</p>
-          <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-white/70 px-3 py-2">
-            <p className="mono break-all text-xs text-wood">{publicKey}</p>
-            <button
-              type="button"
-              className="text-xs text-ember"
-              onClick={() => void navigator.clipboard.writeText(publicKey)}
-            >
-              Copy
-            </button>
+        <div className="glass-soft absolute right-0 top-14 z-50 w-80 rounded-xl p-3">
+          <p className="text-[11px] uppercase tracking-[0.14em] text-wood-soft/70">
+            Connected address
+          </p>
+          <div className="mt-2 rounded-lg bg-white/70 px-3 py-2">
+            <AddressDisplay address={publicKey} />
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="mono break-all text-[11px] text-wood-soft/80">{publicKey}</p>
+              <button
+                type="button"
+                className="text-xs text-ember hover:text-ember-deep"
+                onClick={() => void navigator.clipboard.writeText(publicKey)}
+              >
+                Copy
+              </button>
+            </div>
           </div>
 
           <div className="mt-3 flex items-center justify-between">
@@ -94,7 +105,11 @@ const ConnectWalletButton = () => {
             <NetworkBadge network={network} />
           </div>
 
-          <button type="button" onClick={handleDisconnect} className="danger-button mt-3 w-full text-sm">
+          <button
+            type="button"
+            onClick={handleDisconnect}
+            className="danger-button mt-3 w-full text-sm"
+          >
             Step away
           </button>
         </div>

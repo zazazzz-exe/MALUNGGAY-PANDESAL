@@ -1,8 +1,10 @@
 import { useMemo } from "react";
+import AddressDisplay from "../components/ui/AddressDisplay";
 import { useFreighter } from "../hooks/useFreighter";
 import { useReceivedNative } from "../hooks/useReceivedNative";
 import { useGroupStore } from "../store/groupStore";
 import { useAuthStore } from "../store/authStore";
+import { formatTimestamp } from "../lib/format";
 
 const formatXlm = (value: number): string => {
   if (!Number.isFinite(value) || value <= 0) {
@@ -38,12 +40,25 @@ const Profile = () => {
 
       <div className="glass-soft rounded-3xl p-6">
         <p className="text-xs uppercase tracking-[0.18em] text-wood-soft/70">Account</p>
-        {activeUser && <p className="mt-2 text-sm text-wood-soft"><span className="font-semibold">Email:</span> {activeUser.email}</p>}
-        <p className="mt-3 text-xs uppercase tracking-[0.18em] text-wood-soft/70">Wallet</p>
-        <p className="mt-2 text-sm text-wood-soft">
-          {isConnected ? publicKey : "No wallet connected"}
+        {activeUser && (
+          <p className="mt-2 text-sm text-wood-soft">
+            <span className="font-semibold">Email:</span> {activeUser.email}
+          </p>
+        )}
+        <p className="mt-3 text-xs uppercase tracking-[0.18em] text-wood-soft/70">
+          Stellar address
         </p>
-        <p className="mt-1 text-sm text-wood-soft">Network: {network || "Unknown"}</p>
+        {isConnected && publicKey ? (
+          <div className="mt-2 space-y-2">
+            <AddressDisplay address={publicKey} />
+            <p className="mono break-all text-xs text-wood-soft/70">{publicKey}</p>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-wood-soft">No address connected.</p>
+        )}
+        <p className="mt-3 text-sm text-wood-soft">
+          Network: {network || "Unknown"}
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -69,7 +84,8 @@ const Profile = () => {
           <ul className="mt-2 space-y-2 text-sm text-wood-soft">
             {contributionHistory.slice(0, 5).map((entry) => (
               <li key={entry.id}>
-                {entry.amount} {entry.asset || "XLM"} sent to {entry.groupName} at {new Date(entry.createdAt).toLocaleString()}
+                {entry.amount} {entry.asset || "XLM"} sent to {entry.groupName} on{" "}
+                {formatTimestamp(entry.createdAt)}
               </li>
             ))}
           </ul>

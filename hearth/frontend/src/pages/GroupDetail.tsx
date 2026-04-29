@@ -5,35 +5,38 @@ import ContributeButton from "../components/groups/ContributeButton";
 import MemberList from "../components/groups/MemberList";
 import RotationTimeline from "../components/groups/RotationTimeline";
 import TransactionToast from "../components/ui/TransactionToast";
+import AddressDisplay from "../components/ui/AddressDisplay";
 import { useGroupState } from "../hooks/useGroupState";
 import { useFreighter } from "../hooks/useFreighter";
+import { useNicknames } from "../hooks/useNicknames";
+import { useUsdcPhpRate } from "../hooks/useUsdcPhpRate";
 import { useGroupStore } from "../store/groupStore";
+import {
+  formatPhp,
+  formatTimestamp,
+  formatUsdc,
+  truncateAddress,
+  usdcFromStroops
+} from "../lib/format";
 
-const toShortAddress = (value: unknown): string => {
-  if (typeof value !== "string") {
-    return "Unknown";
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "Unknown";
-  }
-
-  if (trimmed.length <= 14) {
-    return trimmed;
-  }
-
-  return `${trimmed.slice(0, 8)}...${trimmed.slice(-6)}`;
-};
+interface ReceiptState {
+  hash: string;
+  amount: string;
+  recipient: string;
+  recipientLabel: string;
+  timestamp: string;
+}
 
 const GroupDetail = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [latestHash, setLatestHash] = useState<string | undefined>(undefined);
+  const [receipt, setReceipt] = useState<ReceiptState | null>(null);
   const [transferAmount, setTransferAmount] = useState("1");
   const { publicKey } = useFreighter();
   const { data, isLoading } = useGroupState();
+  const { getNickname } = useNicknames();
+  const phpRate = useUsdcPhpRate();
   const routeGroup = (location.state as { group?: { id: string; name: string; memberPreview?: string[]; contributionAmount?: string; source?: "live" | "created" } } | null)?.group;
   const storedGroup = useGroupStore((state) => state.groups.find((group) => group.id === id));
   const allContributionHistory = useGroupStore((state) => state.contributionHistory || []);
@@ -86,7 +89,8 @@ const GroupDetail = () => {
   }, [data, storedGroup, routeGroup]);
 
   const currentRound = Number(data?.round ?? 1);
-  const poolBalance = String(data?.pool_balance ?? 0);
+  const poolUsdc = usdcFromStroops(data?.pool_balance);
+  const poolPhp = poolUsdc * phpRate;
   const fallbackGroup = routeGroup || storedGroup;
   const groupName = fallbackGroup?.name || (id ? `Hearth ${id.slice(0, 6)}` : "Your Hearth");
   const isDraftGroup = fallbackGroup?.source === "created";
@@ -104,6 +108,20 @@ const GroupDetail = () => {
     }
     return members[0]?.address || "";
   }, [data, members]);
+
+  const recipientNickname = recipientAddress ? getNickname(recipientAddress) : null;
+
+  const handleTendSuccess = (hash: string) => {
+    const recipientLabel =
+      recipientNickname || (recipientAddress ? truncateAddress(recipientAddress) : "Kin");
+    setReceipt({
+      hash,
+      amount: transferAmount,
+      recipient: recipientAddress,
+      recipientLabel,
+      timestamp: new Date().toISOString()
+    });
+  };
 
   return (
     <section className="mx-auto flex max-w-[900px] flex-col gap-6 rounded-[28px] bg-[linear-gradient(165deg,#FAF3E7_0%,#FFFBF2_45%,#F0E5D0_100%)] px-4 py-6 text-wood md:px-6">
@@ -142,7 +160,16 @@ const GroupDetail = () => {
             <h1 className="font-display text-4xl font-bold">{groupName}</h1>
             <p className="mt-2 text-sm text-wood-soft">Status and Season come straight from your live Soroban contract.</p>
           </div>
-          <div className={`rounded-full px-4 py-2 text-xs font-bold ${isDraftGroup ? "bg-amber-soft/70 text-ember-deep" : "bg-amber text-wood"}`}>
+          <div
+            className={`rounded-full px-4 py-2 text-xs font-bold ${
+              isDraftGroup ? "bg-amber-soft/70 text-ember-deep" : "bg-amber text-wood"
+            }`}
+            title={
+              isDraftGroup
+                ? "This Hearth lives only on this device until it’s funded on Stellar."
+                : "Live on Stellar — funds are held by the contract."
+            }
+          >
             {isDraftGroup ? "Draft" : "Tending"}
           </div>
         </div>
@@ -151,13 +178,27 @@ const GroupDetail = () => {
       <div className="grid gap-4 md:grid-cols-2">
         <article className="glass-soft p-5">
           <p className="text-xs uppercase tracking-[0.18em] text-wood-soft/70">Season Timeline</p>
-          <div className="mt-4">{isLoading ? <p className="text-sm text-wood-soft">Loading Season...</p> : <RotationTimeline members={members.map((m) => m.address)} currentIndex={Number(data?.rotation_index ?? 0)} />}</div>
+          <div className="mt-4">
+            {isLoading ? (
+              <p className="text-sm text-wood-soft">Loading Season...</p>
+            ) : (
+              <RotationTimeline
+                members={members.map((m) => m.address)}
+                currentIndex={Number(data?.rotation_index ?? 0)}
+              />
+            )}
+          </div>
         </article>
 
         <article className="glass-soft p-5">
           <p className="text-xs uppercase tracking-[0.18em] text-wood-soft/70">Hearth Balance</p>
-          <p className="mt-3 font-display text-4xl font-bold text-ember-deep">USDC {poolBalance}</p>
-          <p className="mt-2 text-sm text-wood-soft">Warmth flows once every Keeper has tended.</p>
+          <p className="mt-3 font-display text-4xl font-bold text-ember-deep">
+            {formatUsdc(poolUsdc)}
+          </p>
+          <p className="text-sm text-wood-soft/85">≈ {formatPhp(poolPhp)}</p>
+          <p className="mt-2 text-sm text-wood-soft">
+            Warmth flows once every Keeper has tended.
+          </p>
           <div className="mt-5">
             <CountdownTimer targetDate={new Date(Date.now() + 3 * 86400000 + 14 * 3600000).toISOString()} />
           </div>
@@ -171,14 +212,25 @@ const GroupDetail = () => {
       <article className="glass-soft p-6">
         <p className="text-xs uppercase tracking-[0.18em] text-wood-soft/70">Send XLM</p>
         <div className="mt-3 rounded-2xl border border-warmgray/70 bg-white/75 px-4 py-3 text-sm text-wood-soft">
-          This sends native XLM directly from your Freighter wallet. It does not require Hearth membership in the contract.
+          This sends native XLM directly from your Stellar address. It does not require Hearth membership in the contract.
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-wood-soft">Season {currentRound} of {members.length || 1}</p>
-            <p className="mt-1 font-display text-2xl font-bold text-wood">{publicKey ? "Send from Freighter" : "Connect wallet to send"}</p>
-            <p className="mt-2 text-sm text-wood-soft">Kin: <span className="mono">{toShortAddress(recipientAddress)}</span></p>
-            {isDraftGroup && <p className="mt-2 text-sm text-wood-soft">This Hearth is stored locally; warmth target falls back to the first listed Keeper.</p>}
+            <p className="text-sm text-wood-soft">
+              Season {currentRound} of {members.length || 1}
+            </p>
+            <p className="mt-1 font-display text-2xl font-bold text-wood">
+              {publicKey ? "Send from Freighter" : "Connect Freighter to send"}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-wood-soft">
+              <span>Kin:</span>
+              <AddressDisplay address={recipientAddress} />
+            </div>
+            {isDraftGroup && (
+              <p className="mt-2 text-sm text-wood-soft">
+                This Hearth is stored locally; the warmth target falls back to the first listed Keeper.
+              </p>
+            )}
             <label className="mt-3 block text-sm font-semibold text-wood-soft">
               Amount (XLM)
               <input
@@ -196,7 +248,7 @@ const GroupDetail = () => {
             groupName={groupName}
             recipientAddress={recipientAddress}
             amount={transferAmount}
-            onSuccess={(hash) => setLatestHash(hash)}
+            onSuccess={handleTendSuccess}
           />
         </div>
       </article>
@@ -211,11 +263,23 @@ const GroupDetail = () => {
               <div key={entry.id} className="rounded-2xl border border-warmgray/70 bg-white/75 px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-wood">{entry.amount} {entry.asset || "XLM"} sent</p>
-                    <p className="mono mt-1 text-xs text-wood-soft/80">{toShortAddress(entry.memberAddress)}</p>
+                    <p className="font-semibold text-wood">
+                      {entry.amount} {entry.asset || "XLM"} sent
+                    </p>
+                    <div className="mt-1 text-xs text-wood-soft/80">
+                      <AddressDisplay address={entry.memberAddress} size="xs" />
+                    </div>
+                    <p className="mt-1 text-[11px] text-wood-soft/70">
+                      {formatTimestamp(entry.createdAt)}
+                    </p>
                   </div>
-                  <a className="text-xs text-ember-deep underline" href={`https://stellar.expert/explorer/testnet/tx/${entry.hash}`} target="_blank" rel="noreferrer">
-                    View transaction
+                  <a
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-ember hover:text-ember-deep"
+                    href={`https://stellar.expert/explorer/testnet/tx/${entry.hash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View on Stellar Expert <span aria-hidden="true">↗</span>
                   </a>
                 </div>
               </div>
@@ -224,7 +288,16 @@ const GroupDetail = () => {
         )}
       </article>
 
-      {latestHash && <TransactionToast hash={latestHash} status="success" message="Your tending is on-chain." onClose={() => setLatestHash(undefined)} />}
+      {receipt && (
+        <TransactionToast
+          status="success"
+          hash={receipt.hash}
+          primary={`${receipt.amount} XLM sent to ${receipt.recipientLabel}`}
+          detail={formatTimestamp(receipt.timestamp)}
+          feeText="Network fee: ~0.00001 XLM (less than ₱0.01)"
+          onClose={() => setReceipt(null)}
+        />
+      )}
     </section>
   );
 };

@@ -1,3 +1,5 @@
+import AddressDisplay from "../ui/AddressDisplay";
+
 interface MemberItem {
   address: string;
   hasPaid: boolean;
@@ -8,24 +10,15 @@ interface MemberListProps {
   members: MemberItem[];
 }
 
-const shortAddress = (value: unknown): string => {
-  if (typeof value !== "string") {
-    return "Unknown Keeper";
-  }
-
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "Unknown Keeper";
-  }
-
-  if (trimmed.length <= 14) {
-    return trimmed;
-  }
-
-  return `${trimmed.slice(0, 8)}...${trimmed.slice(-6)}`;
-};
-
 const MemberList = ({ members }: MemberListProps) => {
+  if (!members.length) {
+    return (
+      <div className="rounded-2xl border border-warmgray/70 bg-white/85 p-6 text-sm text-wood-soft">
+        No Keepers in this Hearth yet.
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl border border-warmgray/70 bg-white/90 shadow-card">
       <table className="min-w-full text-left text-sm text-wood">
@@ -38,19 +31,32 @@ const MemberList = ({ members }: MemberListProps) => {
         </thead>
         <tbody>
           {members.map((member, index) => (
-            <tr key={`${member.address || "member"}-${index}`} className="border-t border-warmgray/50">
+            <tr
+              key={`${member.address || "member"}-${index}`}
+              className="border-t border-warmgray/50"
+            >
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-ember to-ember-deep" />
-                  <span className="mono text-xs">{shortAddress(member.address)}</span>
+                  <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-r from-ember to-ember-deep" />
+                  <AddressDisplay address={member.address} />
                 </div>
               </td>
               <td className="px-4 py-3">{member.turn}</td>
               <td className="px-4 py-3">
                 {member.hasPaid ? (
-                  <span className="inline-flex items-center gap-2 font-semibold text-success">✓ Tended</span>
+                  <span
+                    className="inline-flex items-center gap-2 font-semibold text-success"
+                    title="This Keeper has tended for the current Season."
+                  >
+                    ✓ Tended
+                  </span>
                 ) : (
-                  <span className="inline-flex items-center gap-2 font-semibold text-error">✗ Pending</span>
+                  <span
+                    className="inline-flex items-center gap-2 font-semibold text-error"
+                    title="This Keeper hasn’t tended for the current Season yet."
+                  >
+                    ✗ Pending
+                  </span>
                 )}
               </td>
             </tr>
