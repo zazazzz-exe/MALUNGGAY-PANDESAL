@@ -415,6 +415,73 @@ body {
   display: none;
 }
 
+.hero-warmth-pill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 380px;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  background: rgba(255, 251, 242, 0.78);
+  border: 1px solid rgba(232, 116, 60, 0.18);
+  box-shadow: 0 18px 40px rgba(232, 116, 60, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.hero-warmth-icon {
+  display: flex;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.hero-warmth-icon .material-symbols-outlined {
+  font-size: 28px;
+  font-variation-settings: "FILL" 1;
+}
+
+.hero-warmth-icon--keeper {
+  background: linear-gradient(140deg, #F08C53 0%, #E8743C 100%);
+  color: #FFFBF2;
+  box-shadow: 0 8px 20px rgba(232, 116, 60, 0.35);
+}
+
+.hero-warmth-icon--kin {
+  background: rgba(255, 201, 122, 0.32);
+  color: #C25A28;
+  animation: hero-kin-pulse 2.6s ease-out infinite;
+  animation-delay: 1s;
+  will-change: box-shadow;
+}
+
+@keyframes hero-kin-pulse {
+  0%, 60%, 100% {
+    box-shadow: 0 0 0 0 rgba(232, 116, 60, 0);
+  }
+  20% {
+    box-shadow: 0 0 22px 4px rgba(232, 116, 60, 0.35);
+  }
+}
+
+.hero-warmth-track {
+  position: relative;
+  flex: 1;
+  height: 24px;
+}
+
+.hero-warmth-svg {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  overflow: visible;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
@@ -432,5 +499,13 @@ body {
 
   .warmth-static-dot {
     display: block;
+  }
+
+  .hero-warmth-icon--kin {
+    box-shadow: 0 0 22px 4px rgba(232, 116, 60, 0.35);
+  }
+
+  .hero-warmth-dots {
+    display: none;
   }
 }

@@ -196,6 +196,50 @@ export const createSharedGroup = async (input: CreateSharedGroupInput): Promise<
   return mapRecordToSummary(localRecord);
 };
 
+const deleteFromApi = async (groupId: string, userId: string): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ userId })
+  });
+
+  if (!response.ok) {
+    let message = "Failed to delete Hearth.";
+    try {
+      const payload = (await response.json()) as { message?: string };
+      if (payload?.message) {
+        message = payload.message;
+      }
+    } catch {
+      // ignore body parse errors
+    }
+    throw new Error(message);
+  }
+};
+
+export const deleteSharedGroup = async (groupId: string, userId: string): Promise<void> => {
+  if (API_BASE_URL) {
+    try {
+      await deleteFromApi(groupId, userId);
+    } catch (apiError) {
+      // Fall through to local cleanup so the user can still remove a stale local entry,
+      // but surface the original error if the local list also doesn't contain it.
+      const groups = readLocalGroups();
+      if (!groups.some((group) => group.id === groupId)) {
+        throw apiError;
+      }
+    }
+  }
+
+  const groups = readLocalGroups();
+  const filtered = groups.filter((group) => group.id !== groupId);
+  if (filtered.length !== groups.length) {
+    writeLocalGroups(filtered);
+  }
+};
+
 export const joinSharedGroup = async (groupId: string, userId: string): Promise<GroupSummary> => {
   if (API_BASE_URL) {
     try {

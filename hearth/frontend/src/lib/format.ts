@@ -88,3 +88,66 @@ export const formatTimestamp = (iso: string): string => {
     return iso;
   }
 };
+
+export type NextDueTone = "neutral" | "scheduled" | "due" | "overdue";
+
+export interface NextDueInfo {
+  label: string;
+  tone: NextDueTone;
+  dueAt: Date;
+  hasHistory: boolean;
+}
+
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+export const computeNextDue = (
+  lastSendAt: string | null,
+  intervalDays: number | null | undefined
+): NextDueInfo | null => {
+  const interval = Number(intervalDays);
+  if (!Number.isFinite(interval) || interval < 1) {
+    return null;
+  }
+
+  if (!lastSendAt) {
+    return {
+      label: "No tending yet",
+      tone: "neutral",
+      dueAt: new Date(),
+      hasHistory: false
+    };
+  }
+
+  const lastTime = new Date(lastSendAt).getTime();
+  if (!Number.isFinite(lastTime)) {
+    return null;
+  }
+
+  const dueAt = new Date(lastTime + interval * 86400000);
+  const diffDays = Math.round(
+    (startOfDay(dueAt).getTime() - startOfDay(new Date()).getTime()) / 86400000
+  );
+
+  let label: string;
+  let tone: NextDueTone;
+
+  if (diffDays > 1) {
+    label = `Due in ${diffDays} days`;
+    tone = "scheduled";
+  } else if (diffDays === 1) {
+    label = "Due tomorrow";
+    tone = "scheduled";
+  } else if (diffDays === 0) {
+    label = "Due today";
+    tone = "due";
+  } else {
+    const overdue = Math.abs(diffDays);
+    label = `Overdue ${overdue} day${overdue === 1 ? "" : "s"}`;
+    tone = "overdue";
+  }
+
+  return { label, tone, dueAt, hasHistory: true };
+};
+
+export const formatDueDate = (d: Date): string =>
+  d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });

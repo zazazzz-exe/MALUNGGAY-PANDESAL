@@ -144,15 +144,20 @@ const OnboardingTour = ({ steps }: OnboardingTourProps) => {
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-[60] bg-wood/45 backdrop-blur-[2px]"
-        aria-hidden="true"
-      />
-      {ringStyle && (
+      {ringStyle ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed z-[61] rounded-2xl ring-4 ring-amber/85 shadow-[0_0_32px_rgba(255,201,122,0.7)] transition-all duration-300"
-          style={ringStyle}
+          className="pointer-events-none fixed z-[60] rounded-2xl transition-all duration-300"
+          style={{
+            ...ringStyle,
+            boxShadow:
+              "0 0 0 4px rgba(255, 201, 122, 0.95), 0 0 32px 6px rgba(255, 201, 122, 0.55), 0 0 0 9999px rgba(58, 36, 24, 0.72)"
+          }}
+        />
+      ) : (
+        <div
+          className="fixed inset-0 z-[60] bg-wood/72 backdrop-blur-[2px]"
+          aria-hidden="true"
         />
       )}
       <div

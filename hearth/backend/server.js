@@ -83,6 +83,33 @@ app.post("/groups", (req, res) => {
   return res.status(201).json(created);
 });
 
+app.delete("/groups/:id", (req, res) => {
+  const groupId = req.params.id;
+  const requesterId =
+    (typeof req.body?.userId === "string" && req.body.userId.trim()) ||
+    (typeof req.query?.userId === "string" && req.query.userId.trim()) ||
+    "";
+
+  if (!requesterId) {
+    return res.status(400).json({ message: "userId is required." });
+  }
+
+  const groups = readGroups();
+  const target = groups.find((group) => group.id === groupId);
+
+  if (!target) {
+    return res.status(404).json({ message: "Group not found." });
+  }
+
+  if (target.creatorUserId !== requesterId) {
+    return res.status(403).json({ message: "Only the creator can delete this Hearth." });
+  }
+
+  writeGroups(groups.filter((group) => group.id !== groupId));
+
+  return res.json({ id: groupId, deleted: true });
+});
+
 app.post("/groups/:id/join", (req, res) => {
   const groupId = req.params.id;
   const userId = typeof req.body?.userId === "string" ? req.body.userId.trim() : "";

@@ -39,6 +39,58 @@ const LandingPage = () => {
           <motion.p initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="max-w-2xl text-[18px] leading-relaxed text-wood-soft">
             Hearth is a steady, on-chain way to support the people who matter &mdash; your kids, your parents, anyone who depends on you. Set it once. They&rsquo;re taken care of.
           </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="hero-warmth-pill"
+            aria-hidden="true"
+          >
+            <div className="hero-warmth-icon hero-warmth-icon--keeper">
+              <span className="material-symbols-outlined">local_fire_department</span>
+            </div>
+            <div className="hero-warmth-track">
+              <svg viewBox="0 0 220 24" className="hero-warmth-svg" fill="none">
+                <defs>
+                  <filter id="hero-warmth-glow" x="-100%" y="-100%" width="300%" height="300%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="1.4" result="b" />
+                    <feMerge>
+                      <feMergeNode in="b" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <path
+                  id="hero-warmth-path"
+                  d="M 4 12 L 216 12"
+                  stroke="#E8743C"
+                  strokeOpacity="0.32"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <g className="hero-warmth-dots">
+                  {[0, 1, 2].map((i) => (
+                    <circle key={i} r="3" fill="#E8743C" filter="url(#hero-warmth-glow)" opacity="0">
+                      <animateMotion dur="3s" begin={`${i}s`} repeatCount="indefinite">
+                        <mpath href="#hero-warmth-path" />
+                      </animateMotion>
+                      <animate
+                        attributeName="opacity"
+                        values="0;1;1;0"
+                        keyTimes="0;0.12;0.88;1"
+                        dur="3s"
+                        begin={`${i}s`}
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  ))}
+                </g>
+              </svg>
+            </div>
+            <div className="hero-warmth-icon hero-warmth-icon--kin">
+              <span className="material-symbols-outlined">favorite</span>
+            </div>
+          </motion.div>
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="flex flex-wrap justify-center gap-4">
             <Link to="/auth?mode=sign-up&redirect=/create" className="primary-button">Kindle your Hearth</Link>
             <a href="#how-it-works" className="secondary-button">See how it works</a>

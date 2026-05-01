@@ -13,7 +13,7 @@ import {
   truncateAddress
 } from "../lib/format";
 
-const NICKNAMES_DATALIST_ID = "hearth-known-keepers";
+const NICKNAMES_DATALIST_ID = "hearth-known-kins";
 
 interface Preset {
   id: string;
@@ -59,7 +59,7 @@ const DEFAULT_SEASON_DAYS = "7";
 const CreateGroup = () => {
   const navigate = useNavigate();
   const [hearthName, setHearthName] = useState("");
-  const [members, setMembers] = useState<string[]>([""]);
+  const [kinAddress, setKinAddress] = useState("");
   const [contribution, setContribution] = useState(DEFAULT_AMOUNT_USDC);
   const [frequency, setFrequency] = useState(DEFAULT_SEASON_DAYS);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
@@ -73,7 +73,7 @@ const CreateGroup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewing, setReviewing] = useState(false);
 
-  const knownKeepers = useMemo(
+  const knownKins = useMemo(
     () =>
       Object.entries(nicknames).map(([address, nickname]) => ({
         address,
@@ -94,26 +94,18 @@ const CreateGroup = () => {
 
   const validateForm = (): string | null => {
     const trimmedName = hearthName.trim();
-    const validMembers = members.map((m) => m.trim()).filter(Boolean);
+    const trimmedKin = kinAddress.trim();
     const seasonDays = Number(frequency);
     const tendingAmount = Number(contribution);
 
     if (!trimmedName) {
       return "Hearth name is required.";
     }
-    if (validMembers.length < 2) {
-      return "Add at least two Keepers.";
+    if (!trimmedKin) {
+      return "Add a Kin Stellar address.";
     }
-    const invalid = validMembers.find((m) => !isValidStellarAddress(m));
-    if (invalid) {
-      return `"${truncateAddress(invalid)}" doesn't look like a valid Stellar address. They start with G and are 56 characters long.`;
-    }
-    const seen = new Set<string>();
-    for (const m of validMembers) {
-      if (seen.has(m)) {
-        return "Two Keepers have the same address. Each Keeper needs a unique Stellar address.";
-      }
-      seen.add(m);
+    if (!isValidStellarAddress(trimmedKin)) {
+      return `"${truncateAddress(trimmedKin)}" doesn't look like a valid Stellar address. They start with G and are 56 characters long.`;
     }
     if (!Number.isFinite(tendingAmount) || tendingAmount <= 0) {
       return "Tending amount must be more than 0.";
@@ -139,7 +131,7 @@ const CreateGroup = () => {
 
   const handleConfirmKindle = async () => {
     const trimmedName = hearthName.trim();
-    const validMembers = members.map((m) => m.trim()).filter(Boolean);
+    const trimmedKin = kinAddress.trim();
     const seasonDays = Number(frequency);
 
     if (!currentUserId) {
@@ -152,7 +144,7 @@ const CreateGroup = () => {
       setIsSubmitting(true);
       const createdGroup = await createSharedGroup({
         name: trimmedName,
-        members: validMembers,
+        members: [trimmedKin],
         contributionAmount: contribution,
         rotationFrequencyDays: seasonDays,
         creatorUserId: currentUserId
@@ -197,10 +189,11 @@ const CreateGroup = () => {
     );
   }
 
-  const validMembersForReview = members.map((m) => m.trim()).filter(Boolean);
+  const trimmedKinForReview = kinAddress.trim();
   const tendingNumber = Number(contribution) || 0;
   const seasonNumber = Number(frequency) || 0;
   const tendingPhp = tendingNumber * phpRate;
+  const kinNicknameForReview = trimmedKinForReview ? getNickname(trimmedKinForReview) : null;
 
   return (
     <section className="mx-auto max-w-3xl rounded-[28px] bg-[linear-gradient(165deg,#FAF3E7_0%,#FFFBF2_45%,#F0E5D0_100%)] px-4 py-6 text-wood md:px-6">
@@ -244,9 +237,9 @@ const CreateGroup = () => {
         </div>
       </div>
 
-      {knownKeepers.length > 0 && (
+      {knownKins.length > 0 && (
         <datalist id={NICKNAMES_DATALIST_ID}>
-          {knownKeepers.map(({ address, nickname }) => (
+          {knownKins.map(({ address, nickname }) => (
             <option key={address} value={address} label={nickname} />
           ))}
         </datalist>
@@ -265,48 +258,29 @@ const CreateGroup = () => {
 
         <div>
           <p className="text-sm font-semibold text-wood-soft">
-            Keepers (Stellar addresses)
+            Kin (Stellar address)
           </p>
-          {knownKeepers.length > 0 && (
+          {knownKins.length > 0 && (
             <p className="mt-1 text-[11px] text-wood-soft/70">
               Tip: start typing to pick from your saved nicknames.
             </p>
           )}
-          <div className="mt-2 space-y-2">
-            {members.map((member, index) => {
-              const trimmed = member.trim();
-              const nickname = trimmed ? getNickname(trimmed) : null;
-              return (
-                <div key={`keeper-${index}`} className="space-y-1">
-                  <input
-                    list={knownKeepers.length > 0 ? NICKNAMES_DATALIST_ID : undefined}
-                    value={member}
-                    onChange={(e) => {
-                      const next = [...members];
-                      next[index] = e.target.value;
-                      setMembers(next);
-                    }}
-                    className="w-full rounded-xl border border-warmgray/70 bg-white/85 px-3 py-2 text-wood outline-none focus:border-ember"
-                    placeholder="G..."
-                    spellCheck={false}
-                    autoComplete="off"
-                  />
-                  {nickname && (
-                    <p className="text-[11px] text-wood-soft">
-                      Saved as <span className="font-semibold text-wood">{nickname}</span>
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+          <div className="mt-2 space-y-1">
+            <input
+              list={knownKins.length > 0 ? NICKNAMES_DATALIST_ID : undefined}
+              value={kinAddress}
+              onChange={(e) => setKinAddress(e.target.value)}
+              className="w-full rounded-xl border border-warmgray/70 bg-white/85 px-3 py-2 text-wood outline-none focus:border-ember"
+              placeholder="G..."
+              spellCheck={false}
+              autoComplete="off"
+            />
+            {kinNicknameForReview && (
+              <p className="text-[11px] text-wood-soft">
+                Saved as <span className="font-semibold text-wood">{kinNicknameForReview}</span>
+              </p>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => setMembers((prev) => [...prev, ""])}
-            className="mt-2 rounded-full border border-ember px-3 py-1 text-xs font-semibold text-ember hover:bg-amber-soft/40"
-          >
-            Add Keeper
-          </button>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -321,7 +295,7 @@ const CreateGroup = () => {
             />
             {tendingNumber > 0 && (
               <span className="mt-1 block text-[11px] text-wood-soft/80">
-                ≈ {formatPhp(tendingPhp)} per Keeper, per Season
+                ≈ {formatPhp(tendingPhp)} per Season
               </span>
             )}
           </label>
@@ -386,7 +360,7 @@ const CreateGroup = () => {
           <dl className="space-y-3">
             <div>
               <dt className="text-xs uppercase tracking-[0.14em] text-wood-soft/70">
-                Tending per Keeper
+                Tending amount
               </dt>
               <dd className="mt-0.5 font-display text-lg font-semibold text-wood">
                 {formatUsdc(tendingNumber)}{" "}
@@ -405,25 +379,19 @@ const CreateGroup = () => {
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.14em] text-wood-soft/70">
-                Keepers ({validMembersForReview.length})
+                Kin
               </dt>
-              <dd className="mt-1 space-y-1 text-sm text-wood">
-                {validMembersForReview.map((address) => {
-                  const nickname = getNickname(address);
-                  return (
-                    <div
-                      key={address}
-                      className="flex flex-wrap items-center gap-2 rounded-lg bg-cream/60 px-2 py-1"
-                    >
-                      {nickname && (
-                        <span className="font-semibold text-wood">{nickname}</span>
-                      )}
-                      <span className="mono text-[11px] text-wood-soft/80">
-                        {truncateAddress(address, 6, 6)}
-                      </span>
-                    </div>
-                  );
-                })}
+              <dd className="mt-1 text-sm text-wood">
+                {trimmedKinForReview && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-lg bg-cream/60 px-2 py-1">
+                    {kinNicknameForReview && (
+                      <span className="font-semibold text-wood">{kinNicknameForReview}</span>
+                    )}
+                    <span className="mono text-[11px] text-wood-soft/80">
+                      {truncateAddress(trimmedKinForReview, 6, 6)}
+                    </span>
+                  </div>
+                )}
               </dd>
             </div>
           </dl>

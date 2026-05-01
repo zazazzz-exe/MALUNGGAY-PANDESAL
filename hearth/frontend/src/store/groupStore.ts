@@ -48,6 +48,7 @@ interface GroupStoreState {
   contributionHistory: ContributionHistoryEntry[];
   upsertGroups: (groups: GroupSummary[]) => void;
   addCreatedGroup: (group: CreateGroupInput) => string;
+  removeGroup: (groupId: string) => void;
   recordContribution: (entry: Omit<ContributionHistoryEntry, "id" | "createdAt" | "status">) => void;
 }
 
@@ -99,6 +100,11 @@ export const useGroupStore = create<GroupStoreState>()(
 
         return groupId;
       },
+      removeGroup: (groupId: string) =>
+        set((state) => ({
+          groups: state.groups.filter((group) => group.id !== groupId),
+          contributionHistory: state.contributionHistory.filter((entry) => entry.groupId !== groupId)
+        })),
       recordContribution: (entry) => {
         set((state) => ({
           contributionHistory: [

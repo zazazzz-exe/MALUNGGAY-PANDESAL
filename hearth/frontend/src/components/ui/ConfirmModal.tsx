@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -50,12 +51,12 @@ const ConfirmModal = ({
       ? "danger-button px-5 py-3"
       : "primary-button px-5 py-3";
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6"
     >
       <button
         type="button"
@@ -67,7 +68,7 @@ const ConfirmModal = ({
           }
         }}
       />
-      <div className="relative z-10 w-full max-w-md rounded-[24px] border border-warmgray/70 bg-cream p-6 shadow-[0_30px_80px_rgba(58,36,24,0.32)]">
+      <div className="relative z-10 my-auto flex max-h-[calc(100vh-3rem)] w-full max-w-md flex-col overflow-y-auto rounded-[24px] border border-warmgray/70 bg-cream p-6 shadow-[0_30px_80px_rgba(58,36,24,0.32)]">
         <h2
           id="confirm-modal-title"
           className="font-display text-2xl font-bold text-wood"
@@ -104,7 +105,8 @@ const ConfirmModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
